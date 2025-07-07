@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Phone, 
   MapPin, 
@@ -42,6 +42,23 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Ensure map iframe loads properly
+  useEffect(() => {
+    // Force the map to load by directly setting the src attribute from data-src
+    const mapIframe = document.querySelector('iframe[data-loading="lazy"]') as HTMLIFrameElement;
+    if (mapIframe && mapIframe.src === 'about:blank' && mapIframe.dataset.src) {
+      mapIframe.src = mapIframe.dataset.src;
+    }
+    
+    // Import and setup iframe lazy loading directly in the component
+    import('@/utils/iframeLazyLoad').then(module => {
+      const { setupIframeLazyLoading } = module;
+      setupIframeLazyLoading();
+    }).catch(error => {
+      console.error('Failed to load iframe lazy loading utility:', error);
+    });
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -438,13 +455,7 @@ const Contact = () => {
               height="100%" 
               className="border-0" 
               allowFullScreen 
-              /* 
-                We use data-loading="lazy" and data-src instead of loading="lazy"
-                to ensure compatibility with Safari on iOS < 16.4.
-                Our custom iframeLazyLoad.ts utility will handle this attribute
-                and apply the appropriate loading strategy based on browser support.
-              */
-              data-loading="lazy"
+              data-loading="lazy" /* Using data-loading for compatibility with our custom lazy loading utility */
               referrerPolicy="no-referrer-when-downgrade"
               title="BOH Concepts Location"
             ></iframe>

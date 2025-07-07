@@ -515,7 +515,7 @@ export const enConstants: LocalizedConstants = {
       bio: "Ben oversees the financial strategy of BOH Concepts, ensuring sustainable growth while maintaining the resources needed to deliver exceptional service.",
       image: "/images/team/ben.jpg",
       social: {
-        linkedin: "https://linkedin.com/company/boh-concepts",
+        linkedin: "https://www.linkedin.com/in/benjamin-quaynor/",
       },
     },
     {

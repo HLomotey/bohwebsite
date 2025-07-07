@@ -47,7 +47,7 @@ const createTransporter = () => {
 };
 
 // Company email address for receiving form submissions
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'michael@bohconcepts.com';
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'contact@bohconcepts.com';
 const DISTRIBUTION_EMAIL = process.env.EMAIL_USER || 'sefa@bohconcepts.com';
 
 /**
@@ -94,24 +94,86 @@ const sendUserConfirmationEmail = async (formData) => {
  * Send notification email to the company about the new form submission
  */
 const sendCompanyNotificationEmail = async (formData) => {
-  // Build the email content
+  // Build the email content based on form type
   let formFields = '';
+  let emailTemplate = '';
+  
+  // Process form fields
   Object.keys(formData).forEach(key => {
     if (key !== 'formType') {
       formFields += `<p><strong>${key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' ')}:</strong> ${formData[key]}</p>`;
     }
   });
 
-  const mailOptions = {
-    from: `Website Form <${DISTRIBUTION_EMAIL}>`,
-    to: COMPANY_EMAIL,
-    subject: `New ${formData.formType} Form Submission`,
-    html: `
+  // Create a nicer template for contact form submissions
+  if (formData.formType === 'contact') {
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    emailTemplate = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 5px; overflow: hidden;">
+        <div style="background-color: #0047AB; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0;">New Contact Form Submission</h1>
+          <p style="margin: 5px 0 0;">Received on ${currentDate}</p>
+        </div>
+        
+        <div style="padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; border-radius: 5px; padding: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h2 style="color: #0047AB; border-bottom: 1px solid #e0e0e0; padding-bottom: 10px; margin-top: 0;">Contact Details</h2>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px 5px; border-bottom: 1px solid #f0f0f0; width: 30%; font-weight: bold;">Name:</td>
+                <td style="padding: 10px 5px; border-bottom: 1px solid #f0f0f0;">${formData.name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 5px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">Email:</td>
+                <td style="padding: 10px 5px; border-bottom: 1px solid #f0f0f0;"><a href="mailto:${formData.email}" style="color: #0047AB;">${formData.email}</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 5px; border-bottom: 1px solid #f0f0f0; font-weight: bold;">Subject:</td>
+                <td style="padding: 10px 5px; border-bottom: 1px solid #f0f0f0;">${formData.subject}</td>
+              </tr>
+            </table>
+            
+            <h3 style="color: #0047AB; margin-top: 20px;">Message:</h3>
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; border-left: 4px solid #0047AB;">
+              <p style="margin: 0; line-height: 1.6;">${formData.message.replace(/\n/g, '<br>')}</p>
+            </div>
+          </div>
+          
+          <div style="margin-top: 20px; text-align: center; color: #666;">
+            <p>This is an automated message from your website contact form.</p>
+            <p>Reply directly to the sender by using their email address above.</p>
+          </div>
+        </div>
+        
+        <div style="background-color: #f0f0f0; padding: 15px; text-align: center; font-size: 12px; color: #666;">
+          <p>&copy; ${new Date().getFullYear()} BOH Concepts. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+  } else {
+    // Default template for other form types
+    emailTemplate = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>New ${formData.formType} Form Submission</h2>
         ${formFields}
       </div>
-    `,
+    `;
+  }
+
+  const mailOptions = {
+    from: `Website Form <${DISTRIBUTION_EMAIL}>`,
+    to: COMPANY_EMAIL,
+    subject: `New ${formData.formType === 'contact' ? 'Contact Form' : formData.formType} Submission from ${formData.name}`,
+    html: emailTemplate,
   };
   
   try {
